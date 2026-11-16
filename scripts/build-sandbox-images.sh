@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Builds the four controlled runner images used by the judge. Needs Docker and (the first time) internet access
-# to pull the pinned base images. Run once, and again after changing sandbox/Dockerfiles.
+# Builds the four isolated Linux runner images used by the Caliper judge.
+# Prerequisites: Docker daemon running and network access to pull base images.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 build() { echo "==> $1"; docker build -q -t "$1" -f "sandbox/Dockerfiles/$2" sandbox/Dockerfiles; }

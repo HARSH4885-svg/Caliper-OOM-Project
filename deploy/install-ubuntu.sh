@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# One-shot installer for a fresh Ubuntu 22.04/24.04 VM (x86_64 or arm64), run as root:
-#   git clone https://github.com/HARSH4885-svg/CodeSentinel /opt/codesentinel && cd /opt/codesentinel && sudo bash deploy/install-ubuntu.sh [your.domain.com]
-# Without a domain it serves on http://localhost only (use a Cloudflare Tunnel, see docs/DEPLOYMENT.md).
+# Automated installer for a fresh Ubuntu 22.04/24.04 LTS server (x86_64 or arm64), run as root:
+#   git clone https://github.com/HARSH4885-svg/Caliper-College-Team.git /opt/codesentinel && cd /opt/codesentinel && sudo bash deploy/install-ubuntu.sh [your.domain.com]
+# Without a domain it binds to http://localhost:8080 (for preview via Cloudflare Tunnel, refer to docs/DEPLOYMENT.md).
 set -euo pipefail
-[ "$(id -u)" = 0 ] || { echo "run as root (sudo)"; exit 1; }
+[ "$(id -u)" = 0 ] || { echo "Error: Must be run as root (e.g. via sudo)."; exit 1; }
 DOMAIN="${1:-}"; APP=/opt/codesentinel
 cd "$APP"
 export DEBIAN_FRONTEND=noninteractive
@@ -38,4 +38,4 @@ if [ -n "$DOMAIN" ]; then
   ufw allow OpenSSH && ufw allow 80,443/tcp && ufw --force enable
 fi
 echo "0 2 * * * root $APP/deploy/backup.sh" > /etc/cron.d/codesentinel-backup
-sleep 15; curl -fsS http://127.0.0.1:8080/actuator/health && echo && echo "OK. Open https://${DOMAIN:-<your tunnel url>}"
+sleep 15; curl -fsS http://127.0.0.1:8080/actuator/health && echo && echo "Deployment healthy. Open https://${DOMAIN:-<your tunnel url>}"

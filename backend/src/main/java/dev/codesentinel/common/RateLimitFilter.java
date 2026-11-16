@@ -12,7 +12,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/** Per-IP limit on the abusable endpoints: login, register and submission upload (NFR-SEC, deployment blocker B4). */
+/** Per-IP rate limiting on sensitive authentication and upload endpoints. */
 @Component
 @ConditionalOnWebApplication
 @Order(Ordered.HIGHEST_PRECEDENCE + 10)

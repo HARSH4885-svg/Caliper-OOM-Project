@@ -628,8 +628,7 @@ class AcceptanceTest {
 
     @Test @Order(13)
     void auditTrailRecordsKeyActionsWithoutSecrets() throws Exception {
-        // Direct DB read through the repository-free route: use the instructor API surface only by checking behaviour indirectly is not possible,
-        // so we assert via a JDBC query.
+        // Direct database verification for internal audit trail state without leaking authentication secrets.
         var jdbc = org.springframework.jdbc.core.simple.JdbcClient.create(dataSource);
         var actions = jdbc.sql("SELECT DISTINCT action FROM audit_logs").query(String.class).list();
         for (String a : new String[]{"LOGIN", "LOGIN_FAILED", "COURSE_CREATE", "ASSIGNMENT_CREATE", "ASSIGNMENT_PUBLISH", "SUBMISSION_CREATE", "PLAGIARISM_RUN", "PLAGIARISM_REVIEW"})

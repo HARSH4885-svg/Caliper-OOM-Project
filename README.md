@@ -1,34 +1,5 @@
 <div align="center">
 
-# CALIPER
-
-### The Precision Instrument for Code Evaluation & Academic Integrity
-
-A unified, self-hosted platform for computer science education: sandboxed multi-language code judging, explainable dual-engine similarity analysis, and native LTI 1.3 LMS integration.
-
-[![Java](https://img.shields.io/badge/Java-21%20LTS-2563EB?style=for-the-badge&logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-16A34A?style=for-the-badge&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![React](https://img.shields.io/badge/React-18.3-0284C7?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Docker](https://img.shields.io/badge/Sandbox-Docker%20%7C%20gVisor-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://gvisor.dev/)
-[![LTI 1.3](https://img.shields.io/badge/LMS-LTI%201.3%20Advantage-6366F1?style=for-the-badge)](https://www.1edtech.org/standards/lti)
-[![Automated Tests](https://img.shields.io/badge/Automated%20Tests-240%20Passing-059669?style=for-the-badge)](docs/TEST_PLAN_AND_RESULTS.md)
-[![License](https://img.shields.io/badge/License-Academic%20Evaluation-52525B?style=for-the-badge)](LICENSE)
-
-<p align="center">
-  <a href="#-overview--motivation">Overview</a> •
-  <a href="#-core-capabilities">Capabilities</a> •
-  <a href="#-application-showcase">Showcase</a> •
-  <a href="#-architecture--system-topology">Architecture</a> •
-  <a href="#-tech-stack">Tech Stack</a> •
-  <a href="#-getting-started">Quick Start</a> •
-  <a href="#-testing--verification">Testing</a> •
-  <a href="#-technical-documentation-suite">Documentation</a>
-</p>
-
-</div>
-
 ---
 
 ## 📌 Overview & Motivation
@@ -74,12 +45,14 @@ Higher education programming courses typically face two compounding points of fr
 ```
 
 ### The Student Experience
+
 - **In-Browser Coding Workspace**: A low-latency web IDE powered by CodeMirror 6 with syntax highlighting, auto-indentation, and line-level error annotations for **C, C++, Java, Python, and JavaScript/Node.js**.
 - **Interactive Scratchpad**: Students test public sample inputs, write custom test cases, and inspect raw compiler diagnostics (`stdout`/`stderr`) in real time before formal submission.
 - **Protected Verification**: Hidden grading test cases remain confidential on the server; students receive execution status, execution time, and pass/fail counts without exposing private assessment suites.
 - **Draft Auto-Save & History**: Automatic browser-session persistence preserves in-progress work, and multi-attempt tracking records incremental progress toward assignment goals.
 
 ### The Instructor Experience
+
 - **Course & Roster Management**: Create course sections, manage enrollment access codes, upload starter templates, specify private reference solutions, and configure strict per-assignment CPU/memory quotas.
 - **Polymorphic Assessment Authoring**: Build hybrid assessments combining automated programming problems with structured quizzes (Multiple Choice, Multi-Select, True/False, Short Answer, Fill-in-the-Blank, Code Output, and Manual Review).
 - **Similarity Review Desk**: Explore candidate plagiarized pairs prioritized by evidence score, view syntax-aligned diffs with starter code subtracted, and record official faculty dispositions.
@@ -90,7 +63,9 @@ Higher education programming courses typically face two compounding points of fr
 ## ⚡ Core Capabilities
 
 ### 1. Automated Code Evaluation
+
 Submissions are evaluated asynchronously through a database-backed producer-consumer queue (`evaluation_jobs`) using PostgreSQL row-level locks (`FOR UPDATE SKIP LOCKED`).
+
 - **Comprehensive Verdict Taxonomy**:
   - `AC` (Accepted): Output matches expected test data under the comparison policy.
   - `WA` (Wrong Answer): Program ran cleanly but output deviated from expected results.
@@ -102,7 +77,9 @@ Submissions are evaluated asynchronously through a database-backed producer-cons
 - **Strict Output Comparison Policy**: Line endings are normalized (`\r\n` $\equiv$ `\n`), trailing line whitespace is stripped, and trailing blank lines at the end of output are ignored. Token order, case sensitivity, interior spacing, and numeric representation (`1` vs `1.0`) are strictly enforced.
 
 ### 2. Multi-Runtime Sandbox Isolation
+
 Untrusted user submissions execute inside ephemeral container environments configured with defensive host protections:
+
 - **Network Isolation**: `--network none` disconnects the container from all virtual and physical networks, eliminating reverse shells, port scanning, and cloud metadata harvesting (`169.254.169.254`).
 - **Read-Only Root Filesystem**: Mounted with `--read-only`; the container cannot modify system binaries or libraries.
 - **Ephemeral Scratch Storage**: Temporary file generation is constrained to an isolated `tmpfs` mounted with `noexec,nosuid,size=64m`.
@@ -112,7 +89,9 @@ Untrusted user submissions execute inside ephemeral container environments confi
 - **SafeZip Archive Ingestion Guard**: `SafeZipExtractor` prevents Zip Slip directory traversal attacks (`../`), nested decompression bombs, symlink escapes, and uncompressed storage quotas.
 
 ### 3. Explainable Dual-Engine Similarity Analysis
+
 Caliper analyzes code similarity strictly within the scope of a single assignment to protect student privacy and avoid cross-assignment false positives:
+
 - **Lexical Tokenization & Normalization**: Hand-crafted scanners for C, C++, Java, Python, and JavaScript tokenize code, strip comments/whitespace, and normalize variable identifiers by unit-scoped first occurrence (`FIRST_OCCURRENCE_UNIT`).
 - **Starter Code Subtraction**: Common instructor-supplied starter templates and boilerplate headers are subtracted from token streams before fingerprinting.
 - **Winnowing & Inverted Index**: Computes rolling Rabin-Karp hashes ($k=10$, $w=5$) and selects guaranteed-dense fingerprint subsets, querying an inverted index to avoid $O(N^2)$ pairwise comparisons.
@@ -121,6 +100,7 @@ Caliper analyzes code similarity strictly within the scope of a single assignmen
 - **Rarity Weighting**: Common idioms and widespread syntactic structures shared across many students are automatically down-weighted.
 
 ### 4. Enterprise LMS Interoperability & Dossiers
+
 - **1EdTech LTI 1.3 Advantage Core**: Complete Canvas LMS integration with OIDC third-party login initiation, public JWKS key rotation (`/api/lti/jwks`), state/nonce replay validation, and Assignment and Grade Services (AGS) automated grade synchronization.
 - **Polymorphic Dossier Export**: One-click generation of formal disciplinary dossiers via `DossierExportRegistry` in **PDF (OpenPDF)**, **HTML**, and **JSON** formats, complete with timestamps, dual forensic scores, and matched code excerpts.
 
@@ -292,22 +272,23 @@ CALIPER/
 ├── .env.example                   # Environment configuration template
 └── pom.xml                        # Maven multi-module root build configuration
 ```
+
 </details>
 
 ---
 
 ## 💻 Tech Stack
 
-| Domain | Technologies & Libraries | Purpose |
-| :--- | :--- | :--- |
-| **Backend Core** | `Java 21 LTS`, `Spring Boot 3.3.5`, `Spring Security`, `Flyway` | High-throughput REST API, transactional services, and database migrations. |
-| **Database** | `PostgreSQL 16`, `HikariCP`, `Spring JdbcClient` | Relational storage, concurrency-safe worker queue (`FOR UPDATE SKIP LOCKED`). |
-| **Plagiarism Engine** | `Pure Java 21`, `Tree-sitter 0.24`, `SplitMix64`, `Rabin-Karp` | Lexical tokenization, rolling hashes, inverted index, AST structural comparison. |
-| **Sandbox Runtime** | `Docker (runc)`, `Google gVisor (runsc)`, `Alpine Linux` | Rootless, capability-dropped, network-isolated container execution environments. |
-| **Frontend UI** | `React 18.3`, `TypeScript 5.6`, `Vite 5.4`, `CodeMirror 6` | Low-latency coding workspace, side-by-side diff viewers, and role-based desks. |
-| **Document Export** | `OpenPDF 2.0` | Server-side programmatic rendering of Academic Integrity Hearing Dossiers. |
-| **Interoperability** | `1EdTech LTI 1.3 Advantage Core`, `RSA-2048`, `JWKS` | Single sign-on and Assignment and Grade Services (AGS) score synchronization. |
-| **Testing** | `JUnit 5`, `MockMvc`, `Vitest 2.1`, `React Testing Library` | Multi-tier unit, container integration, and end-to-end API verification. |
+| Domain                      | Technologies & Libraries                                                | Purpose                                                                          |
+| :-------------------------- | :---------------------------------------------------------------------- | :------------------------------------------------------------------------------- |
+| **Backend Core**      | `Java 21 LTS`, `Spring Boot 3.3.5`, `Spring Security`, `Flyway` | High-throughput REST API, transactional services, and database migrations.       |
+| **Database**          | `PostgreSQL 16`, `HikariCP`, `Spring JdbcClient`                  | Relational storage, concurrency-safe worker queue (`FOR UPDATE SKIP LOCKED`).  |
+| **Plagiarism Engine** | `Pure Java 21`, `Tree-sitter 0.24`, `SplitMix64`, `Rabin-Karp`  | Lexical tokenization, rolling hashes, inverted index, AST structural comparison. |
+| **Sandbox Runtime**   | `Docker (runc)`, `Google gVisor (runsc)`, `Alpine Linux`          | Rootless, capability-dropped, network-isolated container execution environments. |
+| **Frontend UI**       | `React 18.3`, `TypeScript 5.6`, `Vite 5.4`, `CodeMirror 6`      | Low-latency coding workspace, side-by-side diff viewers, and role-based desks.   |
+| **Document Export**   | `OpenPDF 2.0`                                                         | Server-side programmatic rendering of Academic Integrity Hearing Dossiers.       |
+| **Interoperability**  | `1EdTech LTI 1.3 Advantage Core`, `RSA-2048`, `JWKS`              | Single sign-on and Assignment and Grade Services (AGS) score synchronization.    |
+| **Testing**           | `JUnit 5`, `MockMvc`, `Vitest 2.1`, `React Testing Library`     | Multi-tier unit, container integration, and end-to-end API verification.         |
 
 ---
 
@@ -317,42 +298,51 @@ CALIPER/
 
 Ensure the following tools are installed on your host system:
 
-| Tool | Minimum Version | Verified Version | Purpose |
-| :--- | :---: | :---: | :--- |
-| **Java JDK** | `21+` | OpenJDK 25 / 21 LTS | Backend application, judge, and similarity engine. |
-| **Apache Maven** | `3.9+` | Maven 3.9.9 | Multi-module build tool. |
-| **Node.js & npm** | `20+ LTS` | Node v22.23 / npm 10.9 | React frontend toolchain. |
-| **Docker Engine** | `24+` | Docker 29.7 / Desktop | Sandboxed container execution. |
-| **PostgreSQL** | `16+` | PostgreSQL 16.15 | Primary relational datastore (or use Compose). |
+| Tool                    | Minimum Version |    Verified Version    | Purpose                                            |
+| :---------------------- | :-------------: | :--------------------: | :------------------------------------------------- |
+| **Java JDK**      |     `21+`     |  OpenJDK 25 / 21 LTS  | Backend application, judge, and similarity engine. |
+| **Apache Maven**  |    `3.9+`    |      Maven 3.9.9      | Multi-module build tool.                           |
+| **Node.js & npm** |   `20+ LTS`   | Node v22.23 / npm 10.9 | React frontend toolchain.                          |
+| **Docker Engine** |     `24+`     | Docker 29.7 / Desktop | Sandboxed container execution.                     |
+| **PostgreSQL**    |     `16+`     |    PostgreSQL 16.15    | Primary relational datastore (or use Compose).     |
 
 ---
 
 ### Step-by-Step Installation
 
 #### 1. Clone the Repository
+
 ```bash
 git clone https://github.com/HARSH4885-svg/Caliper-College-Team.git
 cd Caliper-College-Team
 ```
 
 #### 2. Configure Environment
+
 Copy the environment template:
+
 ```bash
 cp .env.example .env
 ```
+
 *(The default `.env.example` contains sensible defaults for local evaluation).*
 
 #### 3. Start Database Service
+
 Start the PostgreSQL container:
+
 ```bash
 docker compose up -d
 ```
+
 Verify the container is healthy:
+
 ```bash
 docker ps --filter "name=codesentinel-postgres"
 ```
 
 #### 4. Build Sandbox Runner Images
+
 Build the standardized, isolated container runner images:
 
 ```bash
@@ -362,29 +352,37 @@ Build the standardized, isolated container runner images:
 # On Windows (PowerShell):
 .\scripts\windows\build-sandbox-images.ps1
 ```
+
 *This compiles `codesentinel/runner-native:1`, `runner-java:1`, `runner-python:1`, and `runner-node:1`.*
 
 #### 5. Launch the Application
 
 ##### Option A: Quick Demonstration Mode (Automated)
+
 Run the automated launcher script to build the frontend, package the backend, initialize demo data, and start Caliper:
+
 ```bash
 bash deploy/presentation.sh
 ```
 
 ##### Option B: Standard Local Development
+
 Start the Spring Boot backend in one terminal:
+
 ```bash
 mvn spring-boot:run -pl backend
 ```
+
 The backend initializes the database schema with Flyway and starts on `http://127.0.0.1:8080`.
 
 In a second terminal, start the Vite development server:
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+
 The frontend UI will be accessible at `http://127.0.0.1:5173`.
 
 ---
@@ -393,12 +391,12 @@ The frontend UI will be accessible at `http://127.0.0.1:5173`.
 
 When `SEED_DEMO=true` or `APP_SEED_DEMO=true` is enabled, the platform seeds standard demonstration accounts:
 
-| Role | Email Address | Password | Permissions Scope |
-| :--- | :--- | :--- | :--- |
+| Role                 | Email Address                    | Password            | Permissions Scope                                     |
+| :------------------- | :------------------------------- | :------------------ | :---------------------------------------------------- |
 | **Instructor** | `demo-instructor@demo.invalid` | `demo-password-1` | Lead instructor across seeded courses (CS201, CS301). |
-| **Student 1** | `student1@demo.invalid` | `demo-password-1` | Enrolled in CS201 & CS301 (has sample submissions). |
-| **Student 2** | `student2@demo.invalid` | `demo-password-1` | Enrolled in CS201 & CS301 (has sample submissions). |
-| **Student 3** | `student3@demo.invalid` | `demo-password-1` | Enrolled in CS201 & CS301 (has sample submissions). |
+| **Student 1**  | `student1@demo.invalid`        | `demo-password-1` | Enrolled in CS201 & CS301 (has sample submissions).   |
+| **Student 2**  | `student2@demo.invalid`        | `demo-password-1` | Enrolled in CS201 & CS301 (has sample submissions).   |
+| **Student 3**  | `student3@demo.invalid`        | `demo-password-1` | Enrolled in CS201 & CS301 (has sample submissions).   |
 
 > [!WARNING]
 > These credentials are for local demonstration and evaluation only. Production deployments must set `SEED_DEMO=false` and configure unique secrets.
@@ -408,6 +406,7 @@ When `SEED_DEMO=true` or `APP_SEED_DEMO=true` is enabled, the platform seeds sta
 ## 📖 Workflows & Usage
 
 ### Instructor Workflow
+
 1. **Course Creation**: Create a course section (e.g. `CS201: Data Structures`) and generate a unique course enrollment code.
 2. **Assignment Authoring**: Define deadlines, memory/time limits, upload starter templates, and set sample/hidden test cases.
 3. **Plagiarism Investigation**: Navigate to the assignment's **Similarity Review Desk**, click **Run Comparison**, and inspect triaged pairs.
@@ -415,6 +414,7 @@ When `SEED_DEMO=true` or `APP_SEED_DEMO=true` is enabled, the platform seeds sta
 5. **Dossier Export**: Download a formal Academic Integrity Hearing Dossier in PDF format for institutional review.
 
 ### Student Workflow
+
 1. **Enrollment**: Sign up using the course enrollment code provided by the instructor.
 2. **Interactive Coding**: Open the **Coding Workspace**, select the assignment, and write code in the integrated CodeMirror editor.
 3. **Pre-Submission Testing**: Run code against visible sample test cases and inspect compiler outputs in the scratchpad.
@@ -439,13 +439,16 @@ Total Verified Tests: 240 Passing
 ```
 
 ### 1. Run Complete Backend Test Suite
+
 Ensure the PostgreSQL container is running, then execute:
+
 ```bash
 export POSTGRES_PASSWORD=change-me-local-only
 mvn test
 ```
 
 ### 2. Run Individual Module Tests
+
 ```bash
 # Plagiarism engine algorithms, AST parsers, and benchmarks
 mvn test -pl engine
@@ -458,12 +461,14 @@ mvn test -pl backend
 ```
 
 ### 3. Run Frontend Test Suite
+
 ```bash
 cd frontend
 npm test
 ```
 
 ### 4. Run Frontend Production Build & Typecheck
+
 ```bash
 cd frontend
 npm run build
@@ -475,14 +480,14 @@ npm run build
 
 Caliper implements defense-in-depth isolation across all application layers:
 
-| Security Layer | Implemented Mechanisms | Protection Boundary |
-| :--- | :--- | :--- |
-| **Process Sandbox** | `--network none`, `--read-only`, `--cap-drop ALL`, `no-new-privileges`, `user nobody:65534` | Prevents network egress, file tampering, privilege escalation, and host breakout. |
-| **Resource Quotas** | `--cpus=1.0`, `--memory=256m`, `--pids-limit=64`, dual watchdogs | Neutralizes fork bombs, infinite allocation loops, and host resource exhaustion. |
-| **Virtualization Runtime** | Docker `runc` or Google gVisor `runsc` | gVisor intercepts syscalls in user space, eliminating shared kernel vulnerabilities. |
-| **Archive Ingestion** | `SafeZipExtractor` path canonicalization & size budgets | Blocks Zip Slip traversal attacks (`../`), nested archive bombs, and symlink exploits. |
-| **Access Control (RBAC)** | Server-side `Access` service verifying role and enrollment boundaries | Foreign resources return HTTP 404 to avoid disclosing entity existence to unauthorized users. |
-| **Secret Hygiene** | Environment variables, `.env` git-ignored, minimum 32-character JWT secrets | Prevents secret leakage; hardens token signing against brute-force attacks. |
+| Security Layer                   | Implemented Mechanisms                                                                                | Protection Boundary                                                                           |
+| :------------------------------- | :---------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------- |
+| **Process Sandbox**        | `--network none`, `--read-only`, `--cap-drop ALL`, `no-new-privileges`, `user nobody:65534` | Prevents network egress, file tampering, privilege escalation, and host breakout.             |
+| **Resource Quotas**        | `--cpus=1.0`, `--memory=256m`, `--pids-limit=64`, dual watchdogs                                | Neutralizes fork bombs, infinite allocation loops, and host resource exhaustion.              |
+| **Virtualization Runtime** | Docker `runc` or Google gVisor `runsc`                                                            | gVisor intercepts syscalls in user space, eliminating shared kernel vulnerabilities.          |
+| **Archive Ingestion**      | `SafeZipExtractor` path canonicalization & size budgets                                             | Blocks Zip Slip traversal attacks (`../`), nested archive bombs, and symlink exploits.      |
+| **Access Control (RBAC)**  | Server-side `Access` service verifying role and enrollment boundaries                               | Foreign resources return HTTP 404 to avoid disclosing entity existence to unauthorized users. |
+| **Secret Hygiene**         | Environment variables, `.env` git-ignored, minimum 32-character JWT secrets                         | Prevents secret leakage; hardens token signing against brute-force attacks.                   |
 
 ---
 

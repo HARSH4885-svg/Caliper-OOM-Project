@@ -1,6 +1,6 @@
 # REST API
 
-Base: `http://127.0.0.1:8080`. JSON unless noted. Auth: `Authorization: Bearer <token>` from login/register. Errors: `{"error": "message"}` with 400 validation, 401 unauthenticated, 403 wrong role, 404 not found **or not yours**, 409 conflict, 413 too large, 429 locked out. No response contains filesystem paths, password hashes or tokens other than the login response.
+Base: `http://127.0.0.1:8080`. JSON unless noted. Auth: `Authorization: Bearer <token>` from login/register. Errors: `{"error": "message"}` with 400 validation, 401 unauthenticated, 403 wrong role, 404 not found or access denied (entity existence concealed), 409 conflict, 413 too large, 429 locked out. No response contains filesystem paths, password hashes, or token secrets other than the login response.
 
 ## Auth
 | Method | Path | Who | Notes |

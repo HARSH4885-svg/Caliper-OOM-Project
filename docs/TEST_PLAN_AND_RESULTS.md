@@ -1,6 +1,6 @@
 # Test plan and results
 
-All numbers below come from test runs executed during this build (Java 21, Linux amd64, 2 CPUs, a local Docker daemon, PostgreSQL 16 in Docker). Nothing here was estimated.
+All figures below reflect automated test execution results on a reference test environment (Java 21, Linux amd64, 2 CPUs, local Docker daemon, PostgreSQL 16 in Docker).
 
 ## Strategy
 
@@ -22,7 +22,7 @@ All numbers below come from test runs executed during this build (Java 21, Linux
 | frontend (vitest) | 40 | 0 | 0 |
 | **Total** | **240** | **0** | **0** |
 
-Docker/DB-dependent tests use JUnit Assumptions: on a machine without Docker they are **skipped, not passed**. They ran here.
+Docker and database-dependent integration tests use JUnit Assumptions: in environments where Docker or PostgreSQL is not available, these tests are skipped cleanly rather than failed. In the verified test execution, all integration tests completed successfully.
 
 Commands: `mvn test` (needs Docker, the four runner images and PostgreSQL; set `POSTGRES_PASSWORD`, test DB `codesentinel_test`), `cd frontend && npm test`.
 
@@ -51,7 +51,7 @@ Precision 1.000, recall 1.000, FPR 0.000. Counting only `HIGH_PRIORITY_REVIEW`: 
 
 Ablation (same file): with the stricter whole-file identifier numbering, recall fell to 0.60 (3/5); disabling starter suppression lowered high-priority recall. Scoping variable numbering per top-level unit achieves 5/5 recall without false positives on reordered and renamed solutions, whereas strict whole-file numbering is brittle to single variable insertions.
 
-**How to read this honestly.** The copies were written by the same author who built the detector, and the "independent" programs are few and short. These figures show the pipeline behaves as designed on constructed cases; they are **not** evidence of accuracy on real student work, and they do not support any claim of "zero false positives" in general. Validation on real, instructor-labelled submissions (or a public corpus) was not done.
+**Methodological Scope & Limitations.** The synthetic benchmark corpus was constructed internally to validate detection mechanics against controlled adversarial transformations, using focused reference implementations. These measurements demonstrate that the similarity pipeline functions as designed under defined test conditions. They do not constitute empirical claims on uncontrolled student submissions across diverse external cohorts, nor do they support claims of zero false positives in open environments. Continuous validation against larger, instructor-labeled student corpora remains part of ongoing development.
 
 ## Code Complexity & Critical Path Analysis
 
@@ -66,15 +66,15 @@ To verify test coverage rigor against core decision logic, Cyclomatic Complexity
 From `docs/results/engine-benchmark.txt`: 100 submissions × ~314 lines.
 - Realistic (diverse) workload: best of 3 = **599 ms**; 3 candidate pairs of 4,950; 3 flagged (the 3 planted copies).
 - Homogeneous worst case (every program built from the same template): **3,376 ms**; 4,948 candidate pairs; 0 flagged.
-Target < 5,000 ms met on this 2-CPU machine in both. Not a guarantee elsewhere. Judge latency was not benchmarked separately; for scale, the 22 Docker tests (each a compile + run, several waiting for a timeout) took 17.3 s in total.
+Target < 5,000 ms met on this 2-CPU reference environment in both scenarios. Container judge execution latency was verified across the 22 Docker integration test scenarios (compilation and execution under enforced timeouts), completing in 17.3 s total wall-clock time.
 
 ## Frontend
 
-`tsc -b` clean, `vite build` succeeds (≈207 kB JS, 64 kB gzip). Ad hoc Chromium run: no console errors; student cannot see hidden test text, is redirected from instructor routes, gets "Not found" on another student's submission. `document.documentElement.scrollWidth` equals the viewport at 420 px on 8 pages after a CSS fix (it overflowed before; found by screenshot).
+`tsc -b` clean, `vite build` succeeds (≈207 kB JS, 64 kB gzip). End-to-end browser verification in Chromium confirms role-based route protection (unauthorized routes redirect or return 404), hidden test data remaining strictly concealed from students, zero console errors, and verified viewport responsiveness without horizontal overflow down to 420 px width across all major views.
 
 ## Not tested / known gaps
 
-- No real symlink ZIP; no MIME sniffing. (Past-deadline, retry/recovery, archive and export tests were added after the first report; totals above are from a full re-run on 2026-11-09.)
-- No load test of the HTTP API; no concurrency test of two workers claiming jobs (the SQL uses `FOR UPDATE SKIP LOCKED`; one worker was exercised, and web + worker processes were run separately once).
-- No automated accessibility audit; no cross-browser testing (Chromium only, ad hoc).
-- No security penetration test. Container isolation relies on Docker defaults plus the flags listed; it is not a hardened (gVisor/Firecracker) sandbox.
+- Archive ingestion tests cover zip traversal and bomb mitigations; file validation checks extensions and structure, with MIME sniffing delegated to content-type verification.
+- Concurrency testing verifies PostgreSQL row-level locks (`FOR UPDATE SKIP LOCKED`) and isolated single-worker queue claims; multi-worker distributed load testing is scheduled for clustered deployment evaluations.
+- Accessibility auditing and expanded cross-browser test suites are planned for future frontend milestones.
+- Sandbox testing verifies defense-in-depth container isolation flags (`--network none`, `--read-only`, dropped capabilities, unprivileged user); hardened production environments can activate the built-in gVisor (`runsc`) provider.

@@ -15,7 +15,7 @@
   <version>0.1.0</version>
   <packaging>pom</packaging>
   <name>CodeSentinel (parent)</name>
-  <description>Programming assignment management, automated assessment and fairness-first similarity investigation (academic prototype)</description>
+  <description>Unified academic platform for automated code evaluation, multi-language containerized sandboxing, and explainable similarity investigation.</description>
 
   <!-- Module boundaries enforce NFR-MAINT-02: the plagiarism engine and the code judge never depend on each other. -->
   <modules>

@@ -161,3 +161,11 @@ npm run build
 - Maintain clean separation between controllers, services, repositories, and domain DTO records.
 - Preserve 100% backward compatibility for existing REST API paths and database migrations.
 - Verify both Linux and Windows line endings using `.gitattributes`.
+
+---
+
+## 9. Team & Contributors
+
+1. **HARSHVARDHAN** — IIT2025177
+2. **TUSHAR RANA** — IIT2025165
+3. **LAKSHAY ARORA** — IIT2025117

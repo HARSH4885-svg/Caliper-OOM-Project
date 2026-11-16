@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """
-Derives the five SYNTHETIC copied submissions of the quality dataset from independently written ones, and writes the
-ground-truth label file. Run from the repo root:  python3 -I scripts/make-quality-fixtures.py
-The twelve I* submissions are hand-written independent solutions; everything C* is a deliberate copy (ground truth).
+Generates the five synthetic copied submissions for the quality benchmark dataset
+from independently written solutions and writes the ground-truth label file.
+Usage (from repository root): python3 -I scripts/make-quality-fixtures.py
+The twelve I* submissions are independent solutions; C* submissions represent
+controlled adversarial plagiarism transformations (ground-truth copies).
 """
 import os, re, shutil
 

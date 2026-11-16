@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Instant;
 import java.util.List;
 
-/** Every number comes from a query; nothing here is hard-coded. */
+/** Aggregates role-specific metrics and real-time activity counters directly from database queries. */
 @RestController
 @RequestMapping("/api/dashboard")
 public class DashboardController {
