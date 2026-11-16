@@ -130,7 +130,7 @@ public final class SimilarityEngine implements PlagiarismEngine {
                 // rarity gate: sharing only common fingerprints is not a candidate (saves the structural stage)
                 if (rarity.active && analyzer.weightedDice(a, b, rarity) < cfg.candidateCutoff() / 2) continue;
                 // canonical order by submission id so (A,B) and (B,A) cannot both appear
-                selected.add(a.id.compareTo(b.id) <= 0 ? new SubmissionProfile[]{a, b} : new SubmissionProfile[]{b, a});
+                selected.add(compareSubmissions(a.id, b.id) <= 0 ? new SubmissionProfile[]{a, b} : new SubmissionProfile[]{b, a});
             }
             candidates += selected.size();
             AstStructuralAnalyzer astAnalyzer = new AstStructuralAnalyzer();
@@ -154,11 +154,20 @@ public final class SimilarityEngine implements PlagiarismEngine {
             }).toList());
         }
         pairs.sort(Comparator.comparingInt((PairReport p) -> rank(p)).thenComparing(Comparator.comparingDouble(PairReport::distinctiveScore).reversed())
-                .thenComparing(PairReport::submissionA).thenComparing(PairReport::submissionB));
+                .thenComparing(PairReport::submissionA, SimilarityEngine::compareSubmissions)
+                .thenComparing(PairReport::submissionB, SimilarityEngine::compareSubmissions));
 
         long ms = (System.nanoTime() - t0) / 1_000_000;
         AnalysisStats stats = new AnalysisStats(req.submissions().size(), groups.size(), possible, candidates, ms, unsupported);
         return new AnalysisResult(cfg.fingerprintVersion(), cfg, pairs, notes, fingerprintRecords, stats);
+    }
+
+    static int compareSubmissions(String idA, String idB) {
+        try {
+            return Long.compare(Long.parseLong(idA), Long.parseLong(idB));
+        } catch (NumberFormatException e) {
+            return idA.compareTo(idB);
+        }
     }
 
     private static int rank(PairReport p) {

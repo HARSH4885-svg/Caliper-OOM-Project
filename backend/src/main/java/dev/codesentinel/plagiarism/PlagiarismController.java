@@ -189,7 +189,7 @@ public class PlagiarismController {
         PairDetail detail = detail(pairId);
 
         var asgInfo = jdbc.sql("""
-                SELECT a.title, c.code, c.name, u.display_name, sp.run_id
+                SELECT a.title, c.code, c.title, u.display_name, sp.run_id
                 FROM similarity_pairs sp
                 JOIN assignments a ON a.id = sp.assignment_id
                 JOIN courses c ON c.id = a.course_id

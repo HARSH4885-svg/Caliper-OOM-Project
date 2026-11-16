@@ -9,30 +9,69 @@ function CodePane({ title, sid, files, fragments, side, file, onFile, focusLine,
 }) {
   const [text, setText] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
-  const marks = useMemo(() => lineMarks(fragments, side, file), [fragments, side, file])
+  const activeFile = files.find(x => x.path === file) ?? files[0]
+  const marks = useMemo(() => lineMarks(fragments, side, activeFile?.path ?? file), [fragments, side, activeFile, file])
+
   useEffect(() => {
-    const f = files.find(x => x.path === file)
-    if (!f) return
-    setText(null); setErr(null)
-    api.text(`/api/submissions/${sid}/files/${f.id}`).then(setText).catch(e => setErr(e.message))
-  }, [sid, files, file])
+    if (!activeFile) {
+      setText('')
+      setErr(null)
+      return
+    }
+    let cancelled = false
+    setText(null)
+    setErr(null)
+    api.text(`/api/submissions/${sid}/files/${activeFile.id}`)
+      .then(t => {
+        if (!cancelled) setText(t)
+      })
+      .catch(e => {
+        if (!cancelled) setErr(e.message)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [sid, activeFile?.id])
+
   useEffect(() => {
     if (focusLine == null || !scrollRef.current) return
     const el = scrollRef.current.querySelector<HTMLElement>(`[data-line="${focusLine}"]`)
     if (el) scrollRef.current.scrollTop = Math.max(0, el.offsetTop - 60)
   }, [focusLine, text, scrollRef])
+
   const lines = text?.split('\n') ?? []
   return (
     <section className="pane" aria-label={title}>
-      <header><strong>{title}</strong><label className="small muted" htmlFor={`f-${side}`} style={{ margin: 0 }}>File</label>
-        <select id={`f-${side}`} value={file} onChange={e => onFile(e.target.value)}>{files.map(f => <option key={f.id} value={f.path}>{f.path}</option>)}</select></header>
+      <header>
+        <strong>{title}</strong>
+        <label className="small muted" htmlFor={`f-${side}`} style={{ margin: 0 }}>File</label>
+        <select
+          id={`f-${side}`}
+          value={activeFile?.path ?? ''}
+          onChange={e => onFile(e.target.value)}
+          disabled={files.length <= 1}
+        >
+          {files.map(f => <option key={f.id} value={f.path}>{f.path}</option>)}
+        </select>
+      </header>
       <ErrorBox message={err} />
       <div className="code" ref={scrollRef} onScroll={onScroll} tabIndex={0} aria-label={`${title} source`}>
-        {text === null && !err ? <p className="muted" style={{ padding: 12 }}>Loading…</p> : lines.map((l, i) => {
-          const n = i + 1, hit = marks.get(n)
-          const dist = hit?.some(ix => fragments[ix]?.distinctive)
-          return <div key={n} data-line={n} className={`ln${hit ? ' hit' : ''}${dist ? ' dist' : ''}${focusLine === n ? ' focus' : ''}`}><i>{n}</i><span>{l || ' '}</span></div>
-        })}
+        {text === null && !err ? (
+          <p className="muted" style={{ padding: 12 }}>Loading…</p>
+        ) : files.length === 0 ? (
+          <p className="muted" style={{ padding: 12 }}>No files submitted.</p>
+        ) : (
+          lines.map((l, i) => {
+            const n = i + 1, hit = marks.get(n)
+            const dist = hit?.some(ix => fragments[ix]?.distinctive)
+            return (
+              <div key={n} data-line={n} className={`ln${hit ? ' hit' : ''}${dist ? ' dist' : ''}${focusLine === n ? ' focus' : ''}`}>
+                <i>{n}</i>
+                <span>{l || ' '}</span>
+              </div>
+            )
+          })
+        )}
       </div>
     </section>
   )
@@ -59,13 +98,22 @@ export function CodeCompare({ detail }: { detail: PairDetail }) {
     return fragments
   }, [evidenceMode, fragments, structuralFragments])
 
-  const firstA = filesWithMatches(activeFragments, 'A')[0] ?? filesA[0]?.path ?? ''
-  const firstB = filesWithMatches(activeFragments, 'B')[0] ?? filesB[0]?.path ?? ''
-  const [fileA, setFileA] = useState(firstA)
-  const [fileB, setFileB] = useState(firstB)
+  const initialA = filesWithMatches(activeFragments, 'A')[0] ?? filesA[0]?.path ?? ''
+  const initialB = filesWithMatches(activeFragments, 'B')[0] ?? filesB[0]?.path ?? ''
+  const [fileA, setFileA] = useState(initialA)
+  const [fileB, setFileB] = useState(initialB)
   const [focus, setFocus] = useState<{ a: number; b: number } | null>(null)
   const refA = useRef<HTMLDivElement>(null), refB = useRef<HTMLDivElement>(null)
   const syncing = useRef(false)
+
+  // Synchronise selected files whenever pair detail or evidence mode changes
+  useEffect(() => {
+    const nextA = filesWithMatches(activeFragments, 'A')[0] ?? filesA[0]?.path ?? ''
+    const nextB = filesWithMatches(activeFragments, 'B')[0] ?? filesB[0]?.path ?? ''
+    setFileA(nextA)
+    setFileB(nextB)
+    setFocus(null)
+  }, [summary.id, evidenceMode, filesA, filesB, activeFragments])
 
   // Synchronised scrolling: proportional, with a guard so the two panes do not trigger each other forever.
   const sync = (from: React.RefObject<HTMLDivElement>, to: React.RefObject<HTMLDivElement>) => () => {
@@ -78,14 +126,40 @@ export function CodeCompare({ detail }: { detail: PairDetail }) {
   }
 
   const go = (f: { fileA: string; fileB: string; startLineA: number; startLineB: number }) => {
-    setFileA(f.fileA); setFileB(f.fileB); setFocus({ a: f.startLineA, b: f.startLineB })
+    setFileA(f.fileA)
+    setFileB(f.fileB)
+    setFocus({ a: f.startLineA, b: f.startLineB })
   }
 
   return (
     <div>
       <div className="compare">
-        <CodePane title={`${summary.a.studentName}`} sid={summary.a.submissionId} files={filesA} fragments={activeFragments} side="A" file={fileA} onFile={setFileA} focusLine={focus?.a ?? null} scrollRef={refA} onScroll={sync(refA, refB)} />
-        <CodePane title={`${summary.b.studentName}`} sid={summary.b.submissionId} files={filesB} fragments={activeFragments} side="B" file={fileB} onFile={setFileB} focusLine={focus?.b ?? null} scrollRef={refB} onScroll={sync(refB, refA)} />
+        <CodePane
+          key={`pane-A-${summary.a.submissionId}-${fileA}`}
+          title={`${summary.a.studentName}`}
+          sid={summary.a.submissionId}
+          files={filesA}
+          fragments={activeFragments}
+          side="A"
+          file={fileA}
+          onFile={setFileA}
+          focusLine={focus?.a ?? null}
+          scrollRef={refA}
+          onScroll={sync(refA, refB)}
+        />
+        <CodePane
+          key={`pane-B-${summary.b.submissionId}-${fileB}`}
+          title={`${summary.b.studentName}`}
+          sid={summary.b.submissionId}
+          files={filesB}
+          fragments={activeFragments}
+          side="B"
+          file={fileB}
+          onFile={setFileB}
+          focusLine={focus?.b ?? null}
+          scrollRef={refB}
+          onScroll={sync(refB, refA)}
+        />
       </div>
 
       <div className="row space" style={{ marginTop: 24, marginBottom: 12, alignItems: 'center' }}>

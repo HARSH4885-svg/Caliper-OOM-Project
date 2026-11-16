@@ -116,7 +116,7 @@ export function PairPage() {
         <h3>Why this pair was surfaced</h3>
         <ul className="why">{d.explanation.map((x, i) => <li key={i}>{x}</li>)}</ul>
       </div>
-      <div className="card"><h2>Side by side</h2><CodeCompare detail={d} /></div>
+      <div className="card"><h2>Side by side</h2><CodeCompare key={d.summary.id} detail={d} /></div>
       <div className="card"><h2>Your decision</h2>
         {saved && <div className="notice" role="status"><Icon name="check" />Decision recorded.</div>}
         <p className="hint" style={{ marginTop: 0, marginBottom: 16 }}>Recording a decision does not notify the students and never changes grades. You can record a new one at any time; the history is kept.</p>

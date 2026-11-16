@@ -14,14 +14,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -562,6 +567,63 @@ public class DemoCatalogSeeder implements ApplicationRunner {
                 throw new IllegalStateException("Demo catalogue seeding failed", e);
             }
         });
+        ensureStorageIntegrity();
+    }
+
+    public void ensureStorageIntegrity() {
+        MessageDigest md;
+        try {
+            md = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+        Map<String, byte[]> known = new HashMap<>();
+        for (Problem p : PROBLEMS) {
+            for (String v : p.variants()) {
+                byte[] b = v.getBytes(StandardCharsets.UTF_8);
+                known.put(HexFormat.of().formatHex(md.digest(b)), b);
+            }
+        }
+        String[] demoFiles = {"student1_original", "student2_renamed_copy", "student3_class_based", "student4_merge_sort",
+                "student5_heap", "student6_bubble", "student7_wrong_output", "student8_syntax_error"};
+        for (String f : demoFiles) {
+            try (InputStream in = new ClassPathResource("demo/" + f + ".py").getInputStream()) {
+                byte[] b = in.readAllBytes();
+                known.put(HexFormat.of().formatHex(md.digest(b)), b);
+            } catch (IOException e) {
+                log.warn("Cannot read demo file {}: {}", f, e.getMessage());
+            }
+        }
+
+        var rows = jdbc.sql("SELECT id, storage_key, sha256 FROM submission_files").query((rs, n) -> new Object[]{
+                rs.getLong(1), rs.getString(2), rs.getString(3)
+        }).list();
+
+        int restored = 0;
+        for (Object[] r : rows) {
+            String key = (String) r[1];
+            String expectedSha = (String) r[2];
+            boolean needRestore = false;
+            try (InputStream in = storage.read(key)) {
+                byte[] onDisk = in.readAllBytes();
+                String diskSha = HexFormat.of().formatHex(md.digest(onDisk));
+                if (!diskSha.equalsIgnoreCase(expectedSha)) {
+                    needRestore = true;
+                }
+            } catch (Exception e) {
+                needRestore = true;
+            }
+            if (needRestore) {
+                byte[] content = known.get(expectedSha);
+                if (content != null) {
+                    storage.store(new StoreRequest(key, new ByteArrayInputStream(content)));
+                    restored++;
+                }
+            }
+        }
+        if (restored > 0) {
+            log.info("Restored {} submission files in storage with genuine content matching recorded SHA-256.", restored);
+        }
     }
 
     private void seed() throws Exception {
