@@ -512,11 +512,9 @@ For exhaustive engineering specifications, architectural contracts, and threat m
 
 ## 👥 Team & Contributors
 
-**Team Number**: [TEAM NUMBER]
-
-1. **[MEMBER 1 NAME]** — [Role / Verified Contributions]
-2. **[MEMBER 2 NAME]** — [Role / Verified Contributions]
-3. **[MEMBER 3 NAME]** — [Role / Verified Contributions]
+1. **HARSHVARDHAN** — IIT2025177
+2. **TUSHAR RANA** — IIT2025165
+3. **LAKSHAY ARORA** — IIT2025117
 
 ---
 
