@@ -3,6 +3,7 @@
 # Prerequisites: Docker daemon running, Java 21, Maven, Node.js 20+, and cloudflared.
 # Demonstration accounts are public (refer to README.md). Do not use with sensitive student data.
 set -euo pipefail
+export PATH="$HOME/.local/bin:$HOME/.local/share/apache-maven-3.9.9/bin:$PATH"
 cd "$(dirname "$0")/.."
 [ -f .env ] || { cp .env.example .env; sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$(openssl rand -hex 16)|; s|^JWT_SECRET=.*|JWT_SECRET=$(openssl rand -base64 48 | tr -d '\n')|" .env; }
 set -a; . ./.env; set +a

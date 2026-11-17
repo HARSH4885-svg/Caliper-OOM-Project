@@ -1,3 +1,5 @@
+name: codesentinel
+
 # PostgreSQL only. The app itself runs on the host; student code runs in separate ephemeral containers
 # started by the judge worker (never inside this compose project).
 services:
